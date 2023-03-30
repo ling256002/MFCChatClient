@@ -7,6 +7,7 @@
 #include "MFCChatClient.h"
 #include "MFCChatClientDlg.h"
 #include "afxdialogex.h"
+#include <atlbase.h>
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -59,6 +60,8 @@ CMFCChatClientDlg::CMFCChatClientDlg(CWnd* pParent /*=nullptr*/)
 void CMFCChatClientDlg::DoDataExchange(CDataExchange* pDX)
 {
 	CDialogEx::DoDataExchange(pDX);
+	DDX_Control(pDX, IDC_LIST1, m_list);
+	DDX_Control(pDX, IDC_SENDMSG_EDIT, m_input);
 }
 
 BEGIN_MESSAGE_MAP(CMFCChatClientDlg, CDialogEx)
@@ -67,6 +70,7 @@ BEGIN_MESSAGE_MAP(CMFCChatClientDlg, CDialogEx)
 	ON_WM_QUERYDRAGICON()
 	ON_BN_CLICKED(IDC_CONNECT_BTN, &CMFCChatClientDlg::OnBnClickedConnectBtn)
 	ON_BN_CLICKED(IDC_DISCONNECT_BTN, &CMFCChatClientDlg::OnBnClickedDisconnectBtn)
+	ON_BN_CLICKED(IDC_SEND_BTN, &CMFCChatClientDlg::OnBnClickedSendBtn)
 END_MESSAGE_MAP()
 
 
@@ -102,6 +106,9 @@ BOOL CMFCChatClientDlg::OnInitDialog()
 	SetIcon(m_hIcon, FALSE);		// 设置小图标
 
 	// TODO: 在此添加额外的初始化代码
+
+	GetDlgItem(IDC_PORT_EDIT)->SetWindowText(_T("5000"));
+	GetDlgItem(IDC_IPADDRESS)->SetWindowText(_T("127.0.0.1"));
 
 	return TRUE;  // 除非将焦点设置到控件，否则返回 TRUE
 }
@@ -161,11 +168,76 @@ void CMFCChatClientDlg::OnBnClickedConnectBtn()
 {
 	// TODO: 在此添加控件通知处理程序代码
 	TRACE("[ChatClient]Connect Btn");
-	//
+	CString strPort, strIP;
+	//从控件中获取内容
+	GetDlgItem(IDC_PORT_EDIT)->GetWindowText(strPort);
+	GetDlgItem(IDC_IPADDRESS)->GetWindowText(strIP);
+	//CString转char*
+	USES_CONVERSION;
+	LPCSTR szPort = (LPCSTR)T2A(strPort);
+	LPCSTR szIP = (LPCSTR)T2A(strIP);
+	TRACE("[ChatClient] szPort = %s, szIP = %s", szPort, szIP);
+	TRACE("szPort = %s, szIP = %s", szPort, szIP);
+
+	int iPort = _ttoi(strPort);
+
+	//创建一个socket对象
+	m_client = new CMySocket;
+	//创建套接字  容错
+	if (!m_client->Create())
+	{
+		TRACE("m_client Create error %d", GetLastError());
+		return;
+	}
+	else
+	{
+		TRACE("m_client Create Success!");
+	}
+
+	//连接
+	if (m_client->Connect(strIP, iPort) == SOCKET_ERROR)
+	{
+		TRACE("m_client Connect error %d", GetLastError());
+		return;
+	}
+	else
+	{
+		TRACE("m_client Connect Success!");
+	}
 }
 
 
 void CMFCChatClientDlg::OnBnClickedDisconnectBtn()
 {
 	// TODO: 在此添加控件通知处理程序代码
+}
+
+
+void CMFCChatClientDlg::OnBnClickedSendBtn()
+{
+	// TODO: 在此添加控件通知处理程序代码
+	CString strTmpMsg;
+	GetDlgItem(IDC_SENDMSG_EDIT)->GetWindowText(strTmpMsg);
+
+	USES_CONVERSION;
+	char* szSendBuf = T2A(strTmpMsg);
+	//发送给服务端
+	m_client->Send(szSendBuf, SEND_MAX_BUF, 0); //魔数
+	//显示到列表框
+	//CString strInfo = _T("我:  ");
+	CString strShow = CatShowString(_T("我: "), strTmpMsg);
+	m_list.AddString(strShow);
+
+	UpdateData(FALSE);
+	//清空输入框内容
+	GetDlgItem(IDC_SENDMSG_EDIT)->SetWindowText(_T(""));
+}
+
+CString CMFCChatClientDlg::CatShowString(CString strInfo, CString strMsg)
+{
+	// 时间 + 信息(昵称) + 消息
+	CString strTime = CTime::GetCurrentTime().Format("%X ");
+	CString strShow = strTime + strInfo + strMsg;
+
+	return strShow;
 }
