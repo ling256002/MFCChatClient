@@ -209,6 +209,8 @@
     <None Include="res\MFCChatClient.rc2" />
   </ItemGroup>
   <ItemGroup>
+    <Image Include="Debug\coloring_book\Snipaste_2023-04-02_22-23-18.bmp" />
+    <Image Include="Debug\coloring_book\Snipaste_2023-04-02_22-30-53.bmp" />
     <Image Include="res\MFCChatClient.ico" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

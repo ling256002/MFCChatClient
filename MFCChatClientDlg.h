@@ -41,4 +41,10 @@ public:
 	CEdit m_input;
 	afx_msg void OnBnClickedSendBtn();
 	CString CatShowString(CString strInfo, CString strMsg);
+	afx_msg void OnBnClickedSavenameBtn();
+	afx_msg void OnBnClickedClearmsgBtn();
+	afx_msg void OnBnClickedAutosendCheck();
+	CComboBox m_WordColorCombo;
+	afx_msg HBRUSH OnCtlColor(CDC* pDC, CWnd* pWnd, UINT nCtlColor);
+	virtual BOOL PreTranslateMessage(MSG* pMsg);
 };
